@@ -13,18 +13,24 @@ interface Props {
 }
 
 const runtimeColors: Record<string, string> = {
-  dev: 'var(--codex)',
+  echo: 'var(--codex)',
   codex: 'var(--codex)',
+  sparrow: 'var(--pi)',
   pi: 'var(--pi)',
+  orion: 'var(--gemini)',
   gemini: 'var(--gemini)',
+  nova: 'var(--accent)',
   minimax: 'var(--accent)',
 };
 
 const runtimeIcons: Record<string, string> = {
-  dev: '🐦',
+  echo: '🐦',
   codex: '🤖',
+  sparrow: '🧠',
   pi: '🧠',
+  orion: '✨',
   gemini: '✨',
+  nova: '🔮',
   minimax: '🔮',
 };
 
@@ -91,7 +97,7 @@ function statusLabel(status?: string): string {
 
 function RuntimeBadge({ runtime, prominent }: { runtime: string; prominent?: boolean }) {
   const color = runtimeColors[runtime] || 'var(--text-muted)';
-  const label = runtime === 'pi' ? 'Pi' : runtime.charAt(0).toUpperCase() + runtime.slice(1);
+  const label = runtime === 'pi' ? 'Pi' : runtime === 'dev' ? 'Dev' : runtime === 'gemini' ? 'Gemini' : runtime === 'minimax' ? 'Minimax' : runtime.charAt(0).toUpperCase() + runtime.slice(1);
   return (
     <span className={`runtime-badge${prominent ? ' runtime-badge--prominent' : ''}`} style={{ '--rt-color': color } as React.CSSProperties}>
       {label}
@@ -354,8 +360,10 @@ function RuntimeFilterChips({ subAgents, activeFilter, onFilterChange, runtimes 
     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
       {runtimes.map(rt => {
         const isActive = activeFilter === rt;
-        const color = rt === 'all' ? 'var(--accent)' : rt === 'dev' ? 'var(--codex)' : rt === 'pi' ? 'var(--pi)' : rt === 'gemini' ? 'var(--gemini)' : rt === 'minimax' ? 'var(--accent)' : 'var(--accent)';
-        const label = rt === 'all' ? `All` : rt === 'pi' ? `Pi` : rt === 'dev' ? `Dev` : rt === 'gemini' ? `Gemini` : rt === 'minimax' ? `Minimax` : rt.charAt(0).toUpperCase() + rt.slice(1);
+        const color = rt === 'all' ? 'var(--accent)' : (runtimeColors[rt] || 'var(--accent)');
+        // Dynamic label from agent data if available, else capitalize runtime id
+        const agentForRt = agents.find(a => a.id === rt || a.runtime === rt);
+        const label = rt === 'all' ? `All` : agentForRt?.name || (rt.charAt(0).toUpperCase() + rt.slice(1));
         const count = counts[rt] || 0;
         return (
           <button
@@ -482,7 +490,7 @@ export default function AgentMonitor({ onAgentsChange, onSubAgentsChange, activi
 
   // Quick spawn form state
   const [spawnTask, setSpawnTask] = useState('');
-  const [spawnRuntime, setSpawnRuntime] = useState('codex');
+  const [spawnRuntime, setSpawnRuntime] = useState('echo');
   const [isSpawning, setIsSpawning] = useState(false);
   const [spawnError, setSpawnError] = useState('');
   const [spawnPreset, setSpawnPreset] = useState('');
@@ -1016,7 +1024,7 @@ export default function AgentMonitor({ onAgentsChange, onSubAgentsChange, activi
           );
           const prevStatus = prevAgentStatusRef.current[agent.id];
           const statusJustChanged = !!prevStatus && prevStatus !== agent.status;
-          const runtimeIcon = agent.runtime === 'dev' && label === 'active' ? '💻' : (runtimeIcons[agent.runtime] || '✨');
+          const runtimeIcon = agent.runtime === 'echo' && label === 'active' ? '💻' : (runtimeIcons[agent.runtime] || '✨');
           return (
             <div key={agent.id} className={`agent-card ${label}${statusJustChanged ? ' agent-card--status-changed' : ''}`} data-status={label}>
               <div className="agent-card-icon">
@@ -1541,7 +1549,7 @@ export default function AgentMonitor({ onAgentsChange, onSubAgentsChange, activi
                   )}
                   {groupByRuntime && sorted.length > 0 && (
                     <div style={{ marginBottom: '6px' }}>
-                      {(['codex', 'pi', 'gemini'] as const).map(rt => {
+                      {([...new Set(subAgents.map(sa => sa.runtime).filter(Boolean))] as string[]).map(rt => {
                         const group = sorted.filter(sa => sa.runtime === rt);
                         if (group.length === 0) return null;
                         return (
@@ -1896,9 +1904,9 @@ export default function AgentMonitor({ onAgentsChange, onSubAgentsChange, activi
           <div className="spawn-form-row">
             <select className="spawn-runtime-select" value={spawnRuntime}
               onChange={e => setSpawnRuntime(e.target.value)} disabled={!connected || isSpawning}>
-              <option value="codex">Codex</option>
-              <option value="pi">Pi</option>
-              <option value="gemini">Gemini</option>
+              {agents.map(a => (
+                <option key={a.id} value={a.id}>{a.name || a.id}</option>
+              ))}
             </select>
             <button className="spawn-btn" disabled={!connected || isSpawning || !spawnTask.trim()}
               onClick={handleSpawn}>{isSpawning ? 'Spawning…' : 'Spawn Session'}</button>

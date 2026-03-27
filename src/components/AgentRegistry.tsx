@@ -190,9 +190,7 @@ function calcAgentStats(agentId: string, subAgents: SubAgent[]): AgentStats {
   const sessions = subAgents.filter(sa =>
     sa.sessionKey?.includes(agentId) ||
     sa.taskName?.includes(agentId) ||
-    (agentId === 'dev' && sa.runtime === 'dev') ||
-    (agentId === 'pi' && sa.runtime === 'pi') ||
-    (agentId === 'gemini' && sa.runtime === 'gemini')
+    sa.runtime === agentId
   );
   const now = Date.now();
   const totalRuntimeSecs = sessions.reduce((sum, sa) => {
@@ -231,11 +229,7 @@ function AgentCard({ agent, subAgents, expanded, onToggle }: {
 }) {
   const profile = AGENT_PROFILES[agent.id] ?? AGENT_PROFILES.dev;
   const stats = calcAgentStats(agent.id, subAgents);
-  const activeSessions = subAgents.filter(sa =>
-    (agent.id === 'dev' && sa.runtime === 'dev') ||
-    (agent.id === 'pi' && sa.runtime === 'pi') ||
-    (agent.id === 'gemini' && sa.runtime === 'gemini')
-  );
+  const activeSessions = subAgents.filter(sa => sa.runtime === agent.id);
   const currentTask = activeSessions.find(sa =>
     sa.status?.toLowerCase().includes('run') || sa.status?.toLowerCase().includes('active')
   );
@@ -276,7 +270,7 @@ function AgentCard({ agent, subAgents, expanded, onToggle }: {
           fontSize: '18px', flexShrink: 0,
           boxShadow: `0 0 10px ${profile.color}22`,
         }}>
-          {agent.id === 'dev' ? '💻' : agent.id === 'pi' ? '🧠' : '✨'}
+          {agent.icon || '✨'}
         </div>
 
         {/* Agent identity */}
@@ -287,7 +281,7 @@ function AgentCard({ agent, subAgents, expanded, onToggle }: {
               color: 'var(--text-primary)',
               fontFamily: "'Space Grotesk', sans-serif",
             }}>
-              {profile.name}
+              {agent.name || profile.name}
             </span>
             <span style={{
               fontSize: '9px', fontWeight: 600,

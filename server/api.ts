@@ -253,11 +253,10 @@ app.get('/__gateway/status', async (_req, res) => {
     )
   );
   const agentMeta: Record<string, { name: string; icon: string }> = {
-    dev:    { name: 'Dev Agent',  icon: '🐦' },
-    pi:     { name: 'Pi',         icon: '🍠' },
-    gemini: { name: 'Gemini',      icon: '🌟' },
-    minim:  { name: 'Minimax',    icon: '🔮' },
-    minimax: { name: 'Minimax',    icon: '🔮' },
+    echo:   { name: 'Echo',   icon: '🐦' },
+    sparrow:{ name: 'Wren',   icon: '🍠' },
+    orion:  { name: 'Ember',  icon: '🔥' },
+    nova:   { name: 'Pixel',  icon: '🔮' },
   };
 
   // Query gateway via WebSocket for active sessions

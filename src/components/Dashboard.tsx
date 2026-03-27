@@ -18,8 +18,8 @@ import type { Agent, SubAgent, ActivityEvent, SystemEvent } from '../types';
 import CommandPalette from './CommandPalette';
 
 // Runtime distribution chips — shown in header for quick runtime breakdown
-function RuntimeDistributionChips({ subAgents }: { subAgents: SubAgent[] }) {
-  const runtimes = ['dev', 'pi', 'gemini'] as const;
+function RuntimeDistributionChips({ subAgents, agents }: { subAgents: SubAgent[], agents: Agent[] }) {
+  const runtimes = [...new Set(subAgents.map(sa => sa.runtime).filter(Boolean))] as string[];
   const counts = runtimes.map(rt => ({
     rt,
     count: subAgents.filter(sa => sa.runtime === rt).length,
@@ -30,8 +30,9 @@ function RuntimeDistributionChips({ subAgents }: { subAgents: SubAgent[] }) {
   return (
     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
       {counts.map(({ rt, count, tokens }) => {
-        const color = rt === 'dev' ? 'var(--dev)' : rt === 'pi' ? 'var(--pi)' : 'var(--gemini)';
-        const label = rt === 'pi' ? 'Pi' : rt.charAt(0).toUpperCase() + rt.slice(1);
+        const color = rt === 'echo' ? 'var(--codex)' : rt === 'sparrow' ? 'var(--pi)' : rt === 'orion' ? 'var(--gemini)' : rt === 'nova' ? 'var(--accent)' : 'var(--text-muted)';
+        const agent = agents.find(a => a.id === rt || a.runtime === rt);
+        const label = agent?.name || rt.charAt(0).toUpperCase() + rt.slice(1);
         return (
           <div
             key={rt}
@@ -570,9 +571,10 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
   const { stats: statsToast } = useToast();
   const [agents, setAgents] = useState<Agent[]>([
-    { id: 'dev', name: 'Dev Agent', runtime: 'dev', status: 'idle' },
-    { id: 'pi', name: 'Pi', runtime: 'pi', status: 'idle' },
-    { id: 'gemini', name: 'Gemini', runtime: 'gemini', status: 'idle' },
+    { id: 'echo', name: 'Echo', runtime: 'echo', status: 'idle' },
+    { id: 'sparrow', name: 'Wren', runtime: 'sparrow', status: 'idle' },
+    { id: 'orion', name: 'Ember', runtime: 'orion', status: 'idle' },
+    { id: 'nova', name: 'Pixel', runtime: 'nova', status: 'idle' },
   ]);
   const [subAgents, setSubAgents] = useState<SubAgent[]>([]);
   const [activeTab, setActiveTab] = useState<'monitor' | 'agents' | 'todos' | 'timeline' | 'activity' | 'memory' | 'cron' | 'efficiency' | 'reasoning'>('monitor');
@@ -995,7 +997,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             </div>
           )}
           <LiveClock />
-          <RuntimeDistributionChips subAgents={subAgents} />
+          <RuntimeDistributionChips subAgents={subAgents} agents={agents} />
           <QuickActions connected={gatewayConnected} onShowShortcuts={() => setShowShortcuts(true)} onOpenPalette={() => setShowPalette(true)} onFocus3D={() => setPanelsVisible(v => !v)} />
           <HeaderActivityTicker activities={activities} hatFlash={hatFlash} />
           <SystemEventFeed events={systemEvents} />
